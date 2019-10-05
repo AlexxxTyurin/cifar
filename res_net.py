@@ -65,14 +65,56 @@ def convolutional_block(x, f, filters, stage, block, s=2):
     return x
 
 
-def ResNet50():
+def ResNet50(input_shape, classes):
+    x_input = Input(input_shape)
 
-    model = Sequential()
+    x = ZeroPadding2D(padding=(3, 3))(x_input)
 
-    model.add(Conv2D(64, (7, 7), strides=(2, 2), kernel_initializer=glorot_uniform(seed=0)))
-    model.add(BatchNormalization(axis=3))
-    model.add(Activation('relu'))
-    model.add(MaxPooling2D((3, 3), strides=(2, 2)))
+    # Stage 1
+    x = Conv2D(64, (7, 7), strides=(2, 2), name='conv1', kernel_initializer=glorot_uniform(seed=0))(x)
+    x = BatchNormalization(axis=3, name='bn_conv1')(x)
+    x = Activation('relu')(x)
+    x = MaxPooling2D((3, 3), strides=(2, 2))(x)
+
+    # Stage 2
+    x = convolutional_block(x, f=3, filters=[64, 64, 256], stage=2, block='a', s=1)
+    x = identity_block(x, 3, [64, 64, 256], stage=2, block='b')
+    x = identity_block(x, 3, [64, 64, 256], stage=2, block='c')
+
+    ### START CODE HERE ###
+
+    # Stage 3 (≈4 lines)
+    x = convolutional_block(x, f=3, filters=[128, 128, 512], stage=3, block='a', s=2)
+    x = identity_block(x, 3, [128, 128, 512], stage=3, block='b')
+    x = identity_block(x, 3, [128, 128, 512], stage=3, block='c')
+    x = identity_block(x, 3, [128, 128, 512], stage=3, block='d')
+
+    # Stage 4 (≈6 lines)
+    x = convolutional_block(x, f=3, filters=[256, 256, 1024], stage=4, block='a', s=2)
+    x = identity_block(x, 3, [256, 256, 1024], stage=4, block='b')
+    x = identity_block(x, 3, [256, 256, 1024], stage=4, block='c')
+    x = identity_block(x, 3, [256, 256, 1024], stage=4, block='d')
+    x = identity_block(x, 3, [256, 256, 1024], stage=4, block='e')
+    x = identity_block(x, 3, [256, 256, 1024], stage=4, block='f')
+
+    # Stage 5 (≈3 lines)
+    x = convolutional_block(x, f=3, filters=[512, 512, 2048], stage=5, block='a', s=2)
+    x = identity_block(x, 3, [512, 512, 2048], stage=5, block='b')
+    x = identity_block(x, 3, [512, 512, 2048], stage=5, block='c')
+
+    # AVGPOOL (≈1 line). Use "X = AveragePooling2D(...)(X)"
+    x = AveragePooling2D((2, 2), name='avg_pool')(x)
+
+    ### END CODE HERE ###
+
+    # output layer
+    x = Flatten()(x)
+    x = Dense(classes, activation='softmax', name='fc' + str(classes), kernel_initializer=glorot_uniform(seed=0))(x)
+
+    # Create model
+    model = Model(inputs=x_input, outputs=x, name='ResNet50')
+
+    return model
 
 
 
