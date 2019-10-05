@@ -26,7 +26,7 @@ def identity_block(x, f, filters, stage, block):
     x = Activation('relu')(x)
 
     x = Conv2D(filters=f2, kernel_size=(f, f), strides=(1, 1), padding='same', kernel_initializer=glorot_uniform(0))(x)
-    x = BatchNormalization(axis=3)
+    x = BatchNormalization(axis=3)(x)
     x = Activation('relu')(x)
 
     x = Conv2D(filters=f3, kernel_size=(1, 1), strides=(1, 1), padding='valid', kernel_initializer=glorot_uniform(0))(x)
@@ -46,7 +46,7 @@ def convolutional_block(x, f, filters, stage, block, s=2):
 
     # The main path
     x = Conv2D(filters=f1, kernel_size=(1, 1), strides=(s, s), padding='valid', kernel_initializer=glorot_uniform(0))(x)
-    x = BatchNormalization(axis=3)
+    x = BatchNormalization(axis=3)(x)
     x = Activation('relu')(x)
 
     x = Conv2D(filters=f2, kernel_size=(f, f), strides=(1, 1), padding='same', kernel_initializer=glorot_uniform(0))(x)
@@ -78,6 +78,7 @@ def ResNet50(input_shape, classes):
     x = Activation('relu')(x)
     x = MaxPooling2D((3, 3), strides=(2, 2))(x)
 
+    print(x.shape)
     # Stage 2
     x = convolutional_block(x, f=3, filters=[64, 64, 256], stage=2, block='a', s=1)
     x = identity_block(x, 3, [64, 64, 256], stage=2, block='b')
