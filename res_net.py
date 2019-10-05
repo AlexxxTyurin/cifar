@@ -11,6 +11,8 @@ from keras.utils import plot_model
 from keras.initializers import glorot_uniform
 import scipy.misc
 from matplotlib.pyplot import imshow
+from keras.datasets import cifar10
+import keras
 
 
 def identity_block(x, f, filters, stage, block):
@@ -67,7 +69,7 @@ def convolutional_block(x, f, filters, stage, block, s=2):
 
 def ResNet50(input_shape, classes):
     x_input = Input(input_shape)
-
+    print(x_input.shape)
     x = ZeroPadding2D(padding=(3, 3))(x_input)
 
     # Stage 1
@@ -116,6 +118,26 @@ def ResNet50(input_shape, classes):
 
     return model
 
+
+(x_train, y_train), (x_test, y_test) = cifar10.load_data()
+n, f_h, f_w, n_colors = x_train.shape
+
+x_dev = x_train[int(0.8 * n):, :, :, :]
+y_dev = y_train[int(0.8 * n):]
+
+x_train = x_train[:int(n * 0.8), :, :, :]
+y_train = y_train[:int(n * 0.8)]
+
+x_train = x_train / 255
+x_dev = x_dev / 255
+
+y_train = keras.utils.to_categorical(y_train, 10)
+y_dev = keras.utils.to_categorical(y_dev, 10)
+
+model = ResNet50((f_h, f_w, n_colors), 10)
+model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+model.fit(x_train, y_train, epochs = 2, batch_size = 32)
+print(model.evaluate(x_dev, y_dev))
 
 
 
